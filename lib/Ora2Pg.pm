@@ -14078,9 +14078,9 @@ sub _convert_type
 	{
 		$type_name = $1;
 		my $type_of = $3;
-		$type_name =~ s/"//g;
 		my $internal_name = $type_name;
 		if ($self->{export_schema} && !$self->{schema} && $owner) {
+			$owner = qq("$owner") if ($self->{preserve_case});
 			$type_name = "$owner.$type_name";
 		}
 		$internal_name  =~ s/^[^\.]+\.//;
@@ -14093,8 +14093,8 @@ sub _convert_type
 		{ 
 			$type_of = Ora2Pg::PLSQL::replace_sql_type($type_of, $self->{pg_numeric_type}, $self->{default_numeric}, $self->{pg_integer_type}, $self->{varchar_to_text}, %{$self->{data_type}});
 			$self->{type_of_type}{'Nested Tables'}++;
-			$content .= "DROP TYPE $self->{pg_supports_ifexists} \L$type_name\E;\n" if ($self->{drop_if_exists});
-			$content = "CREATE TYPE \L$type_name\E AS (\L$internal_name\E $type_of\[\]);\n";
+			$content .= "DROP TYPE $self->{pg_supports_ifexists} $type_name;\n" if ($self->{drop_if_exists});
+			$content = "CREATE TYPE $type_name AS ($internal_name $type_of\[\]);\n";
 		}
 		else
 		{
@@ -14123,6 +14123,7 @@ sub _convert_type
 		my $notfinal = $4;
 		$notfinal =~ s/\s+/ /gs;
 		if ($self->{export_schema} && !$self->{schema} && $owner) {
+			$owner = qq("$owner") if ($self->{preserve_case});
 			$type_name = "$owner.$type_name";
 		}
 		if ($description =~ /\s*(MAP MEMBER|MEMBER|CONSTRUCTOR)\s+(FUNCTION|PROCEDURE).*/is)
@@ -14133,7 +14134,6 @@ sub _convert_type
 		}
 		$description =~ s/^\s+//s;
 		my $declar = Ora2Pg::PLSQL::replace_sql_type($description, $self->{pg_numeric_type}, $self->{default_numeric}, $self->{pg_integer_type}, $self->{varchar_to_text}, %{$self->{data_type}});
-		$type_name =~ s/"//g;
 		$type_name = $self->get_replaced_tbname($type_name);
 		if ($notfinal =~ /FINAL/is)
 		{
@@ -14160,6 +14160,7 @@ $declar
 		my $type_inherit = $2;
 		my $description = $3;
 		if ($self->{export_schema} && !$self->{schema} && $owner) {
+			$owner = qq("$owner") if ($self->{preserve_case});
 			$type_name = "$owner.$type_name";
 		}
 		if ($description =~ /\s*(MAP MEMBER|MEMBER|CONSTRUCTOR)\s+(FUNCTION|PROCEDURE).*/is) {
@@ -14169,12 +14170,11 @@ $declar
 		}
 		$description =~ s/^\s+//s;
 		my $declar = Ora2Pg::PLSQL::replace_sql_type($description, $self->{pg_numeric_type}, $self->{default_numeric}, $self->{pg_integer_type}, $self->{varchar_to_text}, %{$self->{data_type}});
-		$type_name =~ s/"//g;
 		$type_name = $self->get_replaced_tbname($type_name);
 		$content = qq{
 CREATE TABLE $type_name (
 $declar
-) INHERITS (\L$type_inherit\E);
+) INHERITS ($type_inherit);
 };
 		$self->{type_of_type}{'Subtype'}++;
 	}
@@ -14183,19 +14183,19 @@ $declar
 		$type_name = $1;
 		my $size = $4;
 		my $tbname = $5;
-		$type_name =~ s/"//g;
 		$tbname =~ s/;//g;
 		$tbname =~ s/\s+NOT\s+NULL//g;
 		my $internal_name = $type_name;
 		chomp($tbname);
 		if ($self->{export_schema} && !$self->{schema} && $owner) {
+			$owner = qq("$owner") if ($self->{preserve_case});
 			$type_name = "$owner.$type_name";
 		}
 		$internal_name  =~ s/^[^\.]+\.//;
 		my $declar = Ora2Pg::PLSQL::replace_sql_type($tbname, $self->{pg_numeric_type}, $self->{default_numeric}, $self->{pg_integer_type}, $self->{varchar_to_text}, %{$self->{data_type}});
 		$declar =~ s/[\n\r]+//s;
 		$content = qq{
-CREATE TYPE \L$type_name\E AS ($internal_name $declar\[$size\]);
+CREATE TYPE $type_name AS ($internal_name $declar\[$size\]);
 };
 		$self->{type_of_type}{Varrays}++;
 	}

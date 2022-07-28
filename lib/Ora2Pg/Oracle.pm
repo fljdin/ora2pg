@@ -3702,12 +3702,13 @@ sub _get_types
 		$tmp{pos} = $row->[2];
 		if (!$self->{preserve_case})
 		{
-			$tmp{code} =~ s/(TYPE\s+)"[^"]+"\."[^"]+"/$1\L$row->[0]\E/igs;
-			$tmp{code} =~ s/(TYPE\s+)"[^"]+"/$1\L$row->[0]\E/igs;
+			$tmp{code} =~ s/(TYPE\s+)"([^"\s]+)"\."([^"\s]+)"/$1\L$2.$3\E/igs;
+			$tmp{code} =~ s/(TYPE\s+)"([^"\s\.]+)"/$1\L$2\E/igs;
 		}
 		else
 		{
-			$tmp{code} =~ s/((?:CREATE|REPLACE|ALTER)\s+TYPE\s+)([^"\s]+)\s/$1"$2" /igs;
+			$tmp{code} =~ s/(TYPE\s+)([^"\s]+)\.([^"\s]+)/$1\L"$2"."$3"\E/igs;
+			$tmp{code} =~ s/(TYPE\s+)([^"\s\.]+)/$1\U"$2"\E/igs;
 		}
 		$tmp{code} =~ s/\s+ALTER/;\nALTER/igs;
 		push(@types, \%tmp);
